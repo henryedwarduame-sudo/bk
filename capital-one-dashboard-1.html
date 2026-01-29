@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital One Mobile Banking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background: #00456d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            width: 150px;
+            margin-bottom: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        .header {
+            background: #00456d;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .logo {
+            width: 120px;
+        }
+
+        /* Account Info */
+        .account-section {
+            background: #00456d;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .account-name {
+            font-size: 18px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .balance-large {
+            font-size: 56px;
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+
+        .balance-label {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 20px 0;
+        }
+
+        .current-balance {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+
+        .current-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Card Status */
+        .card-status {
+            background: #003d5c;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lock-icon {
+            font-size: 20px;
+        }
+
+        /* Actions Section */
+        .actions-section {
+            background: white;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 10px;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            color: #666;
+        }
+
+        .action-text {
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+        }
+
+        .view-all-btn {
+            background: none;
+            border: none;
+            color: #004977;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 15px;
+            cursor: pointer;
+            width: 100%;
+            text-align: right;
+        }
+
+        /* Transactions Section */
+        .transactions-section {
+            background: white;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .no-transactions {
+            color: #666;
+            padding: 20px 0;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            flex: 1;
+            padding: 5px;
+            color: #666;
+        }
+
+        .nav-btn.active {
+            color: #004977;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-text {
+            font-size: 12px;
+        }
+
+        /* Full Page Screens */
+        .full-page {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background: white;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+
+        .full-page.active {
+            display: flex;
+        }
+
+        .page-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #004977;
+        }
+
+        .btn-primary {
+            background: #004977;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-primary:active {
+            background: #003d5c;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #004977;
+            border: 2px solid #004977;
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Profile Page */
+        .profile-header {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .profile-pic-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+        }
+
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #666;
+            overflow: hidden;
+        }
+
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edit-pic-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #004977;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .profile-menu {
+            list-style: none;
+        }
+
+        .profile-menu li {
+            border-bottom: 1px solid #eee;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-menu li:active {
+            background: #f5f5f5;
+        }
+
+        /* Success Message */
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* Transaction Item */
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-info h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .transaction-info p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .transaction-amount {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .transaction-amount.positive {
+            color: #2e7d32;
+        }
+
+        .transaction-amount.negative {
+            color: #c62828;
+        }
+
+        .hidden-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Loading Screen -->
+        <div class="loading-screen" id="loadingScreen">
+            <svg class="loading-logo" viewBox="0 0 200 50" fill="white">
+                <text x="10" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold">Capital One</text>
+            </svg>
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="homeScreen">
+            <!-- Header -->
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <svg class="logo" viewBox="0 0 200 50" fill="white">
+                    <text x="10" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold">Capital One</text>
+                </svg>
+                <div style="width: 34px;"></div>
+            </div>
+
+            <!-- Account Section -->
+            <div class="account-section">
+                <div class="account-name">360 Checking ...8766</div>
+                <div class="balance-large">$<span id="availableBalance">46,191</span><sup style="font-size: 32px;">.90</sup></div>
+                <div class="balance-label">Available Balance</div>
+                <div class="divider"></div>
+                <div class="current-balance">$<span id="currentBalance">46,224</span><sup style="font-size: 20px;">.01</sup></div>
+                <div class="current-label">Current Balance ⓘ</div>
+            </div>
+
+            <!-- Card Status -->
+            <div class="card-status">
+                <span class="lock-icon">🔒</span>
+                <span>Your debit card is locked</span>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions-section">
+                <div class="section-title">I Want To...</div>
+                <div class="actions-grid">
+                    <button class="action-btn" onclick="showPage('payBillsPage')">
+                        <div class="action-icon">📅</div>
+                        <div class="action-text">Pay Bills</div>
+                    </button>
+                    <button class="action-btn" onclick="showPage('transferPage')">
+                        <div class="action-icon">🔄</div>
+                        <div class="action-text">Transfer</div>
+                    </button>
+                    <button class="action-btn" onclick="showPage('sendMoneyPage')">
+                        <div class="action-icon">💸</div>
+                        <div class="action-text">Send Money with Zelle®</div>
+                    </button>
+                    <button class="action-btn" onclick="showPage('depositPage')">
+                        <div class="action-icon">📷</div>
+                        <div class="action-text">Deposit</div>
+                    </button>
+                    <button class="action-btn" onclick="unlockCard()">
+                        <div class="action-icon">🔓</div>
+                        <div class="action-text">Unlock Card</div>
+                    </button>
+                    <button class="action-btn" onclick="showPage('statementsPage')">
+                        <div class="action-icon">📄</div>
+                        <div class="action-text">View Statements</div>
+                    </button>
+                </div>
+                <button class="view-all-btn">VIEW ALL</button>
+            </div>
+
+            <!-- Transactions -->
+            <div class="transactions-section">
+                <div class="section-header">
+                    <h3 class="section-title">Upcoming Transactions (0)</h3>
+                    <button class="view-all-btn" onclick="showPage('transactionsPage')">VIEW ALL</button>
+                </div>
+                <div class="no-transactions" id="noTransactions">
+                    There are currently no upcoming transactions for this account.
+                </div>
+                <div id="transactionsList"></div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <button class="nav-btn active" onclick="showPage('homeScreen')">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-text">Home</div>
+                </button>
+                <button class="nav-btn" onclick="showPage('benefitsPage')">
+                    <div class="nav-icon">⭐</div>
+                    <div class="nav-text">Benefits</div>
+                </button>
+                <button class="nav-btn" onclick="showPage('helpPage')">
+                    <div class="nav-icon">💬</div>
+                    <div class="nav-text">Help</div>
+                </button>
+                <button class="nav-btn" onclick="showPage('offersPage')">
+                    <div class="nav-icon">🛒</div>
+                    <div class="nav-text">Offers</div>
+                </button>
+                <button class="nav-btn" onclick="showPage('profilePage')">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-text">Profile</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Deposit Page -->
+        <div class="full-page" id="depositPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Deposit Check</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <div class="success-message" id="depositSuccess">Deposit successful!</div>
+                <h2 style="margin-bottom: 20px;">Make a Deposit</h2>
+                <form onsubmit="handleDeposit(event)">
+                    <div class="form-group">
+                        <label class="form-label">Deposit Amount</label>
+                        <input type="number" step="0.01" class="form-input" placeholder="0.00" required id="depositAmount">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description (Optional)</label>
+                        <input type="text" class="form-input" placeholder="e.g., Paycheck, Refund" id="depositDesc">
+                    </div>
+                    <button type="submit" class="btn-primary">Submit Deposit</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Send Money Page -->
+        <div class="full-page" id="sendMoneyPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Send Money</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <div class="success-message" id="sendSuccess">Money sent successfully!</div>
+                <h2 style="margin-bottom: 20px;">Send Money with Zelle®</h2>
+                <form onsubmit="handleSendMoney(event)">
+                    <div class="form-group">
+                        <label class="form-label">Recipient Email or Phone</label>
+                        <input type="text" class="form-input" placeholder="email@example.com" required id="recipient">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" step="0.01" class="form-input" placeholder="0.00" required id="sendAmount">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Message (Optional)</label>
+                        <input type="text" class="form-input" placeholder="What's this for?" id="sendMessage">
+                    </div>
+                    <button type="submit" class="btn-primary">Send Money</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div class="full-page" id="profilePage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Profile</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <div class="success-message" id="profileSuccess">Profile updated successfully!</div>
+                <div class="profile-header">
+                    <div class="profile-pic-container">
+                        <div class="profile-pic" id="profilePicDisplay">
+                            <span id="profileInitials">JD</span>
+                            <img id="profileImage" style="display: none;">
+                        </div>
+                        <button class="edit-pic-btn" onclick="document.getElementById('profilePicInput').click()">📷</button>
+                        <input type="file" id="profilePicInput" class="hidden-input" accept="image/*" onchange="handleProfilePicChange(event)">
+                    </div>
+                    <div class="profile-name" id="profileNameDisplay">John Doe</div>
+                </div>
+                <form onsubmit="handleProfileUpdate(event)">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" id="profileName" value="John Doe" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </form>
+                <ul class="profile-menu" style="margin-top: 30px;">
+                    <li onclick="showPage('settingsPage')">Settings <span>›</span></li>
+                    <li onclick="showPage('securityPage')">Security & Privacy <span>›</span></li>
+                    <li onclick="showPage('notificationsPage')">Notifications <span>›</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Transfer Page -->
+        <div class="full-page" id="transferPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Transfer</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <div class="success-message" id="transferSuccess">Transfer completed successfully!</div>
+                <h2 style="margin-bottom: 20px;">Transfer Money</h2>
+                <form onsubmit="handleTransfer(event)">
+                    <div class="form-group">
+                        <label class="form-label">From Account</label>
+                        <input type="text" class="form-input" value="360 Checking ...8766" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">To Account</label>
+                        <input type="text" class="form-input" placeholder="Select account" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" step="0.01" class="form-input" placeholder="0.00" required id="transferAmount">
+                    </div>
+                    <button type="submit" class="btn-primary">Transfer</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pay Bills Page -->
+        <div class="full-page" id="payBillsPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Pay Bills</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Bill Payment</h2>
+                <p style="color: #666; margin-bottom: 20px;">Manage and pay your bills</p>
+                <button class="btn-primary" onclick="showPage('homeScreen')">Add Payee</button>
+                <div style="margin-top: 30px; text-align: center; color: #999;">
+                    <p>No payees added yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statements Page -->
+        <div class="full-page" id="statementsPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Statements</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Account Statements</h2>
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <h4>January 2026</h4>
+                        <p>Statement Period: Jan 1 - Jan 29</p>
+                    </div>
+                    <button class="btn-secondary" style="width: auto; margin: 0; padding: 10px 20px;">View PDF</button>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <h4>December 2025</h4>
+                        <p>Statement Period: Dec 1 - Dec 31</p>
+                    </div>
+                    <button class="btn-secondary" style="width: auto; margin: 0; padding: 10px 20px;">View PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Page -->
+        <div class="full-page" id="transactionsPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Transactions</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Recent Transactions</h2>
+                <div id="allTransactionsList"></div>
+            </div>
+        </div>
+
+        <!-- Benefits Page -->
+        <div class="full-page" id="benefitsPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Benefits</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Your Benefits</h2>
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="margin-bottom: 10px;">Cash Back Rewards</h3>
+                    <p style="color: #666;">Earn unlimited 1.5% cash back on every purchase</p>
+                </div>
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+                    <h3 style="margin-bottom: 10px;">No Annual Fee</h3>
+                    <p style="color: #666;">Enjoy your benefits with no annual fee</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Page -->
+        <div class="full-page" id="helpPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Help</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">How Can We Help?</h2>
+                <ul class="profile-menu">
+                    <li>Contact Customer Service <span>›</span></li>
+                    <li>Report Lost or Stolen Card <span>›</span></li>
+                    <li>Dispute a Transaction <span>›</span></li>
+                    <li>FAQs <span>›</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Offers Page -->
+        <div class="full-page" id="offersPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">←</button>
+                <h2 style="color: white; font-size: 18px;">Offers</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Special Offers</h2>
+                <div style="text-align: center; color: #999; padding: 40px 20px;">
+                    <p>No offers available at this time</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="full-page" id="settingsPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('profilePage')">←</button>
+                <h2 style="color: white; font-size: 18px;">Settings</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Settings</h2>
+                <ul class="profile-menu">
+                    <li>Account Preferences <span>›</span></li>
+                    <li>Privacy Settings <span>›</span></li>
+                    <li>Language <span>›</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Security Page -->
+        <div class="full-page" id="securityPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('profilePage')">←</button>
+                <h2 style="color: white; font-size: 18px;">Security</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Security & Privacy</h2>
+                <ul class="profile-menu">
+                    <li>Change Password <span>›</span></li>
+                    <li>Two-Factor Authentication <span>›</span></li>
+                    <li>Biometric Login <span>›</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Notifications Page -->
+        <div class="full-page" id="notificationsPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('profilePage')">←</button>
+                <h2 style="color: white; font-size: 18px;">Notifications</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <h2 style="margin-bottom: 20px;">Notification Preferences</h2>
+                <ul class="profile-menu">
+                    <li>Transaction Alerts <span>›</span></li>
+                    <li>Account Updates <span>›</span></li>
+                    <li>Marketing Communications <span>›</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Deposit Success Page -->
+        <div class="full-page" id="depositSuccessPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">✕</button>
+                <h2 style="color: white; font-size: 18px;">Deposit Confirmed</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="width: 80px; height: 80px; background: #4caf50; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">✓</div>
+                    <h2 style="color: #4caf50; margin-bottom: 10px;">Deposit Successful</h2>
+                    <p style="color: #666; margin-bottom: 30px;">Your deposit has been processed</p>
+                </div>
+
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px; color: #333;">Transaction Details</h3>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Amount</span>
+                        <span style="font-weight: 600; color: #4caf50; font-size: 18px;" id="depositSuccessAmount">$0.00</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">To Account</span>
+                        <span style="font-weight: 600;">360 Checking ...8766</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Description</span>
+                        <span style="font-weight: 600;" id="depositSuccessDesc">Check Deposit</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Date</span>
+                        <span style="font-weight: 600;" id="depositSuccessDate">Jan 29, 2026</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Time</span>
+                        <span style="font-weight: 600;" id="depositSuccessTime">12:00 PM</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Transaction ID</span>
+                        <span style="font-weight: 600; font-family: monospace;" id="depositSuccessId">TXN123456789</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                        <span style="color: #666;">New Balance</span>
+                        <span style="font-weight: 600; color: #4caf50; font-size: 18px;" id="depositSuccessBalance">$46,191.90</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="showPage('homeScreen')">Done</button>
+                <button class="btn-secondary" onclick="window.print()">Print Receipt</button>
+            </div>
+        </div>
+
+        <!-- Transfer Success Page -->
+        <div class="full-page" id="transferSuccessPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">✕</button>
+                <h2 style="color: white; font-size: 18px;">Transfer Confirmed</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="width: 80px; height: 80px; background: #4caf50; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">✓</div>
+                    <h2 style="color: #4caf50; margin-bottom: 10px;">Transfer Successful</h2>
+                    <p style="color: #666; margin-bottom: 30px;">Your transfer has been completed</p>
+                </div>
+
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px; color: #333;">Transaction Details</h3>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Amount</span>
+                        <span style="font-weight: 600; color: #333; font-size: 18px;" id="transferSuccessAmount">$0.00</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">From Account</span>
+                        <span style="font-weight: 600;">360 Checking ...8766</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">To Account</span>
+                        <span style="font-weight: 600;" id="transferSuccessTo">Savings Account</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Date</span>
+                        <span style="font-weight: 600;" id="transferSuccessDate">Jan 29, 2026</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Time</span>
+                        <span style="font-weight: 600;" id="transferSuccessTime">12:00 PM</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Transaction ID</span>
+                        <span style="font-weight: 600; font-family: monospace;" id="transferSuccessId">TXN123456789</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Status</span>
+                        <span style="font-weight: 600; color: #4caf50;">Completed</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                        <span style="color: #666;">Remaining Balance</span>
+                        <span style="font-weight: 600; font-size: 18px;" id="transferSuccessBalance">$46,191.90</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="showPage('homeScreen')">Done</button>
+                <button class="btn-secondary" onclick="window.print()">Print Receipt</button>
+            </div>
+        </div>
+
+        <!-- Send Money Success Page -->
+        <div class="full-page" id="sendMoneySuccessPage">
+            <div class="header">
+                <button class="back-btn" onclick="showPage('homeScreen')">✕</button>
+                <h2 style="color: white; font-size: 18px;">Payment Sent</h2>
+                <div style="width: 34px;"></div>
+            </div>
+            <div class="page-content">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="width: 80px; height: 80px; background: #4caf50; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">✓</div>
+                    <h2 style="color: #4caf50; margin-bottom: 10px;">Payment Sent Successfully</h2>
+                    <p style="color: #666; margin-bottom: 30px;">Your Zelle® payment has been sent</p>
+                </div>
+
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px; color: #333;">Transaction Details</h3>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Amount</span>
+                        <span style="font-weight: 600; color: #333; font-size: 18px;" id="sendSuccessAmount">$0.00</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">To</span>
+                        <span style="font-weight: 600;" id="sendSuccessRecipient">Recipient</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">From Account</span>
+                        <span style="font-weight: 600;">360 Checking ...8766</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Message</span>
+                        <span style="font-weight: 600;" id="sendSuccessMessage">Payment</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Date</span>
+                        <span style="font-weight: 600;" id="sendSuccessDate">Jan 29, 2026</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Time</span>
+                        <span style="font-weight: 600;" id="sendSuccessTime">12:00 PM</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Transaction ID</span>
+                        <span style="font-weight: 600; font-family: monospace;" id="sendSuccessId">TXN123456789</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #ddd;">
+                        <span style="color: #666;">Status</span>
+                        <span style="font-weight: 600; color: #4caf50;">Sent via Zelle®</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                        <span style="color: #666;">Remaining Balance</span>
+                        <span style="font-weight: 600; font-size: 18px;" id="sendSuccessBalance">$46,191.90</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="showPage('homeScreen')">Done</button>
+                <button class="btn-secondary" onclick="window.print()">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let accountData = {
+            availableBalance: 46191.90,
+            currentBalance: 46224.01,
+            transactions: [],
+            userName: 'John Doe',
+            profilePic: null
+        };
+
+        // Load saved data
+        function loadData() {
+            const saved = localStorage.getItem('capitalOneData');
+            if (saved) {
+                accountData = JSON.parse(saved);
+                updateDisplay();
+            }
+        }
+
+        // Save data
+        function saveData() {
+            localStorage.setItem('capitalOneData', JSON.stringify(accountData));
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('availableBalance').textContent = formatNumber(accountData.availableBalance);
+            document.getElementById('currentBalance').textContent = formatNumber(accountData.currentBalance);
+            document.getElementById('profileNameDisplay').textContent = accountData.userName;
+            document.getElementById('profileName').value = accountData.userName;
+            
+            const initials = accountData.userName.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('profileInitials').textContent = initials;
+
+            if (accountData.profilePic) {
+                document.getElementById('profileImage').src = accountData.profilePic;
+                document.getElementById('profileImage').style.display = 'block';
+                document.getElementById('profileInitials').style.display = 'none';
+            }
+
+            updateTransactionsList();
+        }
+
+        // Format number with commas
+        function formatNumber(num) {
+            const parts = num.toFixed(2).split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return parts[0];
+        }
+
+        // Show loading screen
+        function showLoading(callback) {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.remove('hidden');
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                if (callback) callback();
+            }, 1500);
+        }
+
+        // Show page
+        function showPage(pageId) {
+            showLoading(() => {
+                document.querySelectorAll('.full-page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                
+                if (pageId !== 'homeScreen') {
+                    document.getElementById(pageId).classList.add('active');
+                }
+
+                // Update nav buttons
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            });
+        }
+
+        // Handle deposit
+        function handleDeposit(event) {
+            event.preventDefault();
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            const desc = document.getElementById('depositDesc').value || 'Check Deposit';
+
+            showLoading(() => {
+                accountData.availableBalance += amount;
+                accountData.currentBalance += amount;
+
+                const now = new Date();
+                const transactionId = 'TXN' + Math.floor(Math.random() * 1000000000);
+
+                accountData.transactions.unshift({
+                    type: 'deposit',
+                    amount: amount,
+                    description: desc,
+                    date: now.toLocaleDateString(),
+                    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    transactionId: transactionId
+                });
+
+                saveData();
+                updateDisplay();
+
+                // Update success page with transaction details
+                document.getElementById('depositSuccessAmount').textContent = '$' + amount.toFixed(2);
+                document.getElementById('depositSuccessDesc').textContent = desc;
+                document.getElementById('depositSuccessDate').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                document.getElementById('depositSuccessTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('depositSuccessId').textContent = transactionId;
+                document.getElementById('depositSuccessBalance').textContent = '$' + formatNumber(accountData.availableBalance);
+
+                event.target.reset();
+                
+                // Show success page
+                document.getElementById('depositPage').classList.remove('active');
+                document.getElementById('depositSuccessPage').classList.add('active');
+            });
+        }
+
+        // Handle send money
+        function handleSendMoney(event) {
+            event.preventDefault();
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+            const recipient = document.getElementById('recipient').value;
+            const message = document.getElementById('sendMessage').value || 'Payment';
+
+            if (amount > accountData.availableBalance) {
+                alert('Insufficient funds');
+                return;
+            }
+
+            showLoading(() => {
+                accountData.availableBalance -= amount;
+                accountData.currentBalance -= amount;
+
+                const now = new Date();
+                const transactionId = 'TXN' + Math.floor(Math.random() * 1000000000);
+
+                accountData.transactions.unshift({
+                    type: 'send',
+                    amount: amount,
+                    description: `Zelle to ${recipient}: ${message}`,
+                    date: now.toLocaleDateString(),
+                    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    transactionId: transactionId
+                });
+
+                saveData();
+                updateDisplay();
+
+                // Update success page with transaction details
+                document.getElementById('sendSuccessAmount').textContent = '$' + amount.toFixed(2);
+                document.getElementById('sendSuccessRecipient').textContent = recipient;
+                document.getElementById('sendSuccessMessage').textContent = message;
+                document.getElementById('sendSuccessDate').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                document.getElementById('sendSuccessTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('sendSuccessId').textContent = transactionId;
+                document.getElementById('sendSuccessBalance').textContent = '$' + formatNumber(accountData.availableBalance);
+
+                event.target.reset();
+                
+                // Show success page
+                document.getElementById('sendMoneyPage').classList.remove('active');
+                document.getElementById('sendMoneySuccessPage').classList.add('active');
+            });
+        }
+
+        // Handle transfer
+        function handleTransfer(event) {
+            event.preventDefault();
+            const amount = parseFloat(document.getElementById('transferAmount').value);
+            const toAccount = event.target.querySelector('input[placeholder="Select account"]').value;
+
+            showLoading(() => {
+                accountData.availableBalance -= amount;
+                accountData.currentBalance -= amount;
+
+                const now = new Date();
+                const transactionId = 'TXN' + Math.floor(Math.random() * 1000000000);
+
+                accountData.transactions.unshift({
+                    type: 'transfer',
+                    amount: amount,
+                    description: `Transfer to ${toAccount}`,
+                    date: now.toLocaleDateString(),
+                    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    transactionId: transactionId
+                });
+
+                saveData();
+                updateDisplay();
+
+                // Update success page with transaction details
+                document.getElementById('transferSuccessAmount').textContent = '$' + amount.toFixed(2);
+                document.getElementById('transferSuccessTo').textContent = toAccount;
+                document.getElementById('transferSuccessDate').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                document.getElementById('transferSuccessTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('transferSuccessId').textContent = transactionId;
+                document.getElementById('transferSuccessBalance').textContent = '$' + formatNumber(accountData.availableBalance);
+
+                event.target.reset();
+                
+                // Show success page
+                document.getElementById('transferPage').classList.remove('active');
+                document.getElementById('transferSuccessPage').classList.add('active');
+            });
+        }
+
+        // Handle profile update
+        function handleProfileUpdate(event) {
+            event.preventDefault();
+            const name = document.getElementById('profileName').value;
+
+            showLoading(() => {
+                accountData.userName = name;
+                saveData();
+                updateDisplay();
+
+                document.getElementById('profileSuccess').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('profileSuccess').classList.remove('show');
+                }, 3000);
+            });
+        }
+
+        // Handle profile picture change
+        function handleProfilePicChange(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    accountData.profilePic = e.target.result;
+                    saveData();
+                    updateDisplay();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Unlock card
+        function unlockCard() {
+            showLoading(() => {
+                document.querySelector('.card-status').innerHTML = '<span class="lock-icon">✅</span><span>Your debit card is unlocked</span>';
+                document.querySelector('.card-status').style.background = '#2e7d32';
+            });
+        }
+
+        // Update transactions list
+        function updateTransactionsList() {
+            const listElement = document.getElementById('allTransactionsList');
+            const homeList = document.getElementById('transactionsList');
+            
+            if (accountData.transactions.length === 0) {
+                listElement.innerHTML = '<div style="text-align: center; color: #999; padding: 40px 20px;">No transactions yet</div>';
+                return;
+            }
+
+            const transactionsHTML = accountData.transactions.map(t => `
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <h4>${t.description}</h4>
+                        <p>${t.date}</p>
+                    </div>
+                    <div class="transaction-amount ${t.type === 'deposit' ? 'positive' : 'negative'}">
+                        ${t.type === 'deposit' ? '+' : '-'}$${t.amount.toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+
+            listElement.innerHTML = transactionsHTML;
+            
+            if (accountData.transactions.length > 0) {
+                document.getElementById('noTransactions').style.display = 'none';
+                homeList.innerHTML = transactionsHTML;
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            showLoading(() => {
+                loadData();
+            });
+        });
+    </script>
+</body>
+</html>
